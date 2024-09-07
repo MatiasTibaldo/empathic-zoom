@@ -10,3 +10,8 @@ https://www.kaggle.com/datasets/nicolejyt/facialexpressionrecognition?select=fer
 Este paso puede saltearse ya que en los archivos esta en modelo CNN previamente entrenado (modelCNN.joblib)
 
 ## 4 - Ejecutar el script de conexion a zoom y deteccion de emociones
+Al final del script `conectZoomAndPredictEmotion.py` debe colocar los datos de la reunion:
+   * id_reunion = 'XXX'
+   * contrasenia_reunion = 'YYY'
+   * name_zoom = "Usuario Empathic Zoom"
+   * capture_interval = 2 (intervalo en segundo en que se calculan las emociones)
