@@ -16,7 +16,37 @@ Al ejecutar el script se conectará automáticamente a la reunión de zoom a tra
 Debe descargar el archivo fer2013.csv con el link a continuación:
 https://www.kaggle.com/datasets/nicolejyt/facialexpressionrecognition?select=fer2013.csv y dejarno en el directorio `./input/`
 
-## 2 - Instalación de librerías
+## 2 - Instalación de librerias
+pip install selenium
+pip install opencv-python
+pip install dlib
+
+
+https://github.com/z-mahmud22/Dlib_Windows_Python3.x
+
+python -m pip install dlib-19.24.99-cp312-cp312-win_amd64.whl
+
+pip install joblib
+pip install image
+pip install dill
+pip install keras
+pip install tensorflow
+
+- Para trabajar con el chromedriver
+https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location/#download-the-driver
+
+- Como usar el webdriver manager
+https://github.com/SergeyPirogov/webdriver_manager?tab=readme-ov-file#use-with-chrome
+
+pip install webdriver-manager
+
+- Obtener el chromedriver
+https://developer.chrome.com/docs/chromedriver/downloads?hl=es-419#chromedriver_1140573590
+
+
+- Modificar la línea 45, donde se setea el driver de chrome
+executable_path='C:\Selenium\chromedriver.exe'
+
 
 ## 3 - Entrenar el modelo CNN
 
