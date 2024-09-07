@@ -1,3 +1,5 @@
+import tkinter as tk
+from collections import Counter
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -8,17 +10,64 @@ import dlib
 from joblib import load
 import numpy as np
 import time
-from PIL import Image
+from PIL import Image, ImageTk
 import io
+import threading
 
-# Configuración del modelo de emociones
-emotion_map = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Sad', 5: 'Surprise', 6: 'Neutral'}
+# Configuración del modelo de emociones (en español)
+emotion_map = {0: 'Enojado', 1: 'Disgusto', 2: 'Miedo', 3: 'Feliz', 4: 'Triste', 5: 'Sorpresa', 6: 'Neutral'}
 joblib_filename = './modelCNN.joblib'  # Archivo del modelo entrenado
 model = load(joblib_filename)
 
 # Configuración del detector de caras
 detector = dlib.get_frontal_face_detector()
 FACE_SHAPE = (200, 200)  # Tamaño del frame de captura
+
+# Crear la ventana de la interfaz gráfica
+root = tk.Tk()
+root.title("Resumen de emociones")
+
+# Configurar tamaño fijo y fondo de la ventana
+root.geometry("400x300")
+root.resizable(False, False)
+root.config(bg="lightblue")  # Cambiar el color de fondo
+
+# Diccionario para cargar emojis correspondientes a las emociones
+emoji_paths = {
+    'Enojado': './emojis/Enojado.png',
+    'Disgusto': './emojis/Disgusto.png',
+    'Miedo': './emojis/Miedo.png',
+    'Feliz': './emojis/Feliz.png',
+    'Triste': './emojis/Triste.png',
+    'Sorpresa': './emojis/Sorpresa.png',
+    'Neutral': './emojis/Neutral.png',
+}
+
+# Cargar los emojis y guardarlos en un diccionario de imágenes
+emoji_images = {emotion: ImageTk.PhotoImage(Image.open(path).resize((30, 30))) for emotion, path in emoji_paths.items()}
+
+# Etiqueta inicial
+summary_frame = tk.Frame(root, bg="lightblue")
+summary_frame.pack(pady=20)
+
+# Función para actualizar la interfaz gráfica con el conteo de emociones
+def update_emotion_summary(emotion_counts):
+    # Eliminar los widgets previos
+    for widget in summary_frame.winfo_children():
+        widget.destroy()
+
+    # Crear una fila por cada emoción
+    for emotion, count in emotion_counts.items():
+        frame = tk.Frame(summary_frame, bg="lightblue")
+        frame.pack(anchor="w")
+
+        # Colocar el emoji de la emoción
+        emoji_label = tk.Label(frame, image=emoji_images[emotion], bg="lightblue")
+        emoji_label.pack(side="left", padx=5)
+
+        # Colocar el texto con la emoción y el conteo
+        text_label = tk.Label(frame, text=f"{emotion}: {count}", font=("Helvetica", 14), bg="lightblue")
+        text_label.pack(side="left")
 
 def get_emotion_from_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -40,7 +89,7 @@ def get_emotion_from_image(image):
             emotions.append((x, y, w, h, emotion))
     return emotions
 
-def main():
+def emotion_detection_loop():
     # Configuración del navegador
     service = ChromeService(executable_path='/usr/bin/chromedriver')
     driver = webdriver.Chrome(service=service)
@@ -53,7 +102,7 @@ def main():
     time.sleep(20)
 
     # Esperar a que la vista de galería esté disponible
-    gallery_element = WebDriverWait(driver, 10).until(
+    WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CLASS_NAME, 'gallery-video-container__main-view'))
     )
     
@@ -61,7 +110,6 @@ def main():
     last_capture_time = time.time()
     
     while True:
-         # Tomar una captura de pantalla cada `capture_interval` segundos
         if time.time() - last_capture_time > capture_interval:
             last_capture_time = time.time()
             # Captura la vista de galería de Zoom
@@ -78,16 +126,24 @@ def main():
 
             # Procesar la captura para detectar emociones
             emotions = get_emotion_from_image(image_bgr)
-            print(emotions)
+            
+            # Contar las emociones detectadas
+            emotion_list = [emotion for _, _, _, _, emotion in emotions]
+            emotion_counts = dict(Counter(emotion_list))
+            
+            print(emotion_counts)
+
+            # Actualizar la interfaz gráfica con el resumen de emociones
+            update_emotion_summary(emotion_counts)
+
             # Mostrar rectángulos y etiquetas en la imagen capturada
             for (x, y, w, h, emotion) in emotions:
                 cv2.rectangle(image_bgr, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.putText(image_bgr, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
             # Mostrar el frame con las anotaciones
-            cv2.imshow("Emotion Detection from Screenshot", image_bgr)
-
-
+            ## DESCOMENTAR ESTA LINEA SI SE QUIERE VER LAS EMOCIONES EN LA CAPTURA DE LOS PARTICIPANTES
+            # cv2.imshow("Emotion Detection from Screenshot", image_bgr)
 
         # Salir si se presiona 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -99,8 +155,15 @@ def main():
 
 if __name__ == "__main__":
     # Parámetros de la reunión
-    id_reunion = '76332965308'
-    contrasenia_reunion = 'iVMqSxJ9OI6NrdGfpsHHs7pDcIp7gk.1'
+    id_reunion = '71720453943'
+    contrasenia_reunion = 'dP8M81GlZ0oUcZxMvbTyu9VIKUXli4.1'
     name_zoom = "Matias Test"
-    capture_interval = 10  # Intervalo en segundos para tomar capturas de pantalla
-    main()
+    # Intervalo en segundos para tomar capturas de pantalla
+    capture_interval = 2  
+
+    # Ejecutar la captura de emociones en un hilo separado
+    thread = threading.Thread(target=emotion_detection_loop)
+    thread.start()
+
+    # Iniciar el loop principal de Tkinter
+    root.mainloop()
