@@ -155,8 +155,8 @@ def emotion_detection_loop():
 
 if __name__ == "__main__":
     # Parámetros de la reunión
-    id_reunion = '71720453943'
-    contrasenia_reunion = 'dP8M81GlZ0oUcZxMvbTyu9VIKUXli4.1'
+    id_reunion = '73863024317'
+    contrasenia_reunion = 'X6mBiHUad2gY3Nj96lrXBLsVb2fwHv.1'
     name_zoom = "Matias Test"
     # Intervalo en segundos para tomar capturas de pantalla
     capture_interval = 2  

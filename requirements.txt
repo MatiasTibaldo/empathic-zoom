@@ -1,0 +1,11 @@
+opencv-python
+cmake
+dlib
+joblib
+image 
+dill 
+keras
+tensorflow
+webdriver-manager
+tk
+selenium 
